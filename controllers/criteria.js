@@ -3,8 +3,15 @@ import emailjsConfig from "./config.js";
 (function () {
   emailjs.init(emailjsConfig.userID);
 })();
+
+function validateEmail(email) {
+  // Regular expression for email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
 function sendEmail() {
-  const emailAddress = document.getElementById("emailId").value;
+  const emailAddress = document.getElementById("emailId").value.trim();
   const selectedCategory = document.getElementById("category").value;
   const nameOfUser =
     new URLSearchParams(window.location.search).get("username") || "User";
@@ -22,13 +29,20 @@ function sendEmail() {
   }
 
   if (!emailAddress) {
+    alert("Please enter an email address.");
+    return;
+  }
+
+  if (!validateEmail(emailAddress)) {
     alert("Please enter a valid email address.");
     return;
   }
+
   if (!selectedCategory) {
     alert("Please select a category.");
     return;
   }
+
   emailjs
     .send(emailjsConfig.serviceID, emailjsConfig.templateID, {
       to_email: emailAddress,
@@ -46,4 +60,5 @@ function sendEmail() {
       }
     );
 }
+
 document.getElementById("sendButton").addEventListener("click", sendEmail);
