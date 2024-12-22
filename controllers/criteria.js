@@ -1,11 +1,25 @@
-import emailjsConfig from "./config.js";
+let emailjsConfig = {};
 
-(function () {
-  emailjs.init(emailjsConfig.userID);
+(async function () {
+  try {
+    const response = await fetch("/.netlify/functions/emailjs");
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch configuration: ${response.status} ${response.statusText}`
+      );
+    }
+
+    emailjsConfig = await response.json();
+    emailjs.init(emailjsConfig.userID);
+
+    //console.log("EmailJS initialized successfully:");
+  } catch (error) {
+    //console.error("Failed to initialize EmailJS:", error);
+    alert("Failed to initialize email service. Please try again later.");
+  }
 })();
 
 function validateEmail(email) {
-  // Regular expression for email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
@@ -22,11 +36,8 @@ function sendEmail() {
     d: "https://open.spotify.com/playlist/2W6AmwXjsSo9YxSmKXSs72?si=48d3e455c3c24950",
     e: "https://open.spotify.com/playlist/4NAMMIsULmfzbFXkvCGRZw?si=4ffdca331da440cf",
   };
-  let playlistLink;
 
-  if (selectedCategory) {
-    playlistLink = songsPlaylist[selectedCategory];
-  }
+  let playlistLink = songsPlaylist[selectedCategory];
 
   if (!emailAddress) {
     alert("Please enter an email address.");
@@ -43,8 +54,13 @@ function sendEmail() {
     return;
   }
 
+  const { serviceID, templateID } = emailjsConfig || {};
+  if (!serviceID || !templateID) {
+    alert("Email service is not initialized. Please try again later.");
+    return;
+  }
   emailjs
-    .send(emailjsConfig.serviceID, emailjsConfig.templateID, {
+    .send(serviceID, templateID, {
       to_email: emailAddress,
       name: nameOfUser,
       link: playlistLink,
